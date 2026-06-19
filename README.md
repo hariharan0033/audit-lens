@@ -1,4 +1,4 @@
-# AuditSight — Security Audit Log Dashboard
+# AuditLens - Security Audit Log Dashboard
 
 A full-stack security log investigation dashboard built with React, Node.js, Express, and MongoDB Atlas.
 
