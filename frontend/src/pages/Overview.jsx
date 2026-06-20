@@ -101,7 +101,26 @@ export default function Overview() {
               <Legend
                 formatter={(v) => <span style={{ color: "var(--text-secondary)", fontSize: 12 }}>{v}</span>}
               />
-              <Tooltip contentStyle={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", borderRadius: 8 }} />
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null;
+                  const { name, value } = payload[0];
+                  const color = SEVERITY_COLORS[name] || "var(--text-secondary)";
+                  return (
+                    <div style={{
+                      background: "var(--bg-elevated)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 8,
+                      padding: "8px 12px",
+                      fontSize: 12,
+                      fontFamily: "var(--font-mono)",
+                    }}>
+                      <span style={{ color, fontWeight: 600 }}>{name}</span>
+                      <span style={{ color: "var(--text-secondary)", marginLeft: 10 }}>{value.toLocaleString()}</span>
+                    </div>
+                  );
+                }}
+              />
             </PieChart>
           </ResponsiveContainer>
         </div>
