@@ -273,3 +273,47 @@
   line-height: 1.65;
   overflow-x: auto;
 }
+
+/* DB info banner */
+.dbInfo {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+  font-size: 0.8rem;
+}
+
+.dbInfoLabel {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  border-right: 1px solid var(--border);
+  padding-right: 10px;
+}
+
+.dbInfoStat {
+  color: var(--text-secondary);
+}
+.dbInfoStat strong { color: var(--text-primary); }
+.dbInfoStat code {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--accent-cyan);
+}
+
+.dbInfoDivider { color: var(--border-light); }
+
+.dbOk  { color: var(--severity-low) !important; }
+.dbWarn { color: var(--severity-medium) !important; font-weight: 500; }
+
+.toolBtnWarn:hover:not(:disabled) {
+  border-color: var(--severity-medium) !important;
+  color: var(--severity-medium) !important;
+}

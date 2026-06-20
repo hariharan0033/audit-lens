@@ -32,8 +32,11 @@ router.post(
   async (req, res, next) => {
     if (validate(req, res)) return;
     try {
-      const records = req.body;
-      // insertMany with ordered:false continues on individual doc errors
+      // Explicitly cast timestamp to Date so MongoDB stores it as BSON Date, not string
+      const records = req.body.map((r) => ({
+        ...r,
+        timestamp: new Date(r.timestamp),
+      }));
       const result = await Log.insertMany(records, {
         ordered: false,
         lean: true,
@@ -74,8 +77,8 @@ router.get(
   query("resourceType").optional().isString(),
   query("action").optional().isString(),
   query("actor").optional().isString(),
-  query("from").optional().isISO8601(),
-  query("to").optional().isISO8601(),
+  query("from").optional().isString(),
+  query("to").optional().isString(),
   async (req, res, next) => {
     if (validate(req, res)) return;
     try {
@@ -111,8 +114,18 @@ router.get(
       // Date range
       if (from || to) {
         filter.timestamp = {};
-        if (from) filter.timestamp.$gte = new Date(from);
-        if (to) filter.timestamp.$lte = new Date(to);
+        if (from) {
+          const fromDate = new Date(from);
+          console.log('[logs] from raw=' + from + ' parsed=' + fromDate.toISOString() + ' valid=' + !isNaN(fromDate));
+          if (!isNaN(fromDate)) filter.timestamp.$gte = fromDate;
+        }
+        if (to) {
+          const toDate = new Date(to);
+          console.log('[logs] to raw=' + to + ' parsed=' + toDate.toISOString() + ' valid=' + !isNaN(toDate));
+          if (!isNaN(toDate)) filter.timestamp.$lte = toDate;
+        }
+        if (!filter.timestamp.$gte && !filter.timestamp.$lte) delete filter.timestamp;
+        console.log('[logs] filter.timestamp:', JSON.stringify(filter.timestamp));
       }
 
       // Full-text search (uses the text index)
