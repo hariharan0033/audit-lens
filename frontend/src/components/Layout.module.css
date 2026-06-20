@@ -30,6 +30,7 @@
   padding: 20px 16px;
   border-bottom: 1px solid var(--border);
   height: 64px;
+  flex-shrink: 0;
 }
 
 .logoMark {
@@ -90,17 +91,40 @@
   font-weight: 500;
 }
 
-.collapseBtn {
-  padding: 14px;
-  color: var(--text-muted);
+/* Bottom controls */
+.bottom {
+  padding: 8px;
   border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.collapseBtn {
+  padding: 8px;
+  color: var(--text-muted);
   font-size: 12px;
   transition: color 0.15s;
   text-align: right;
+  border-radius: var(--radius-sm);
 }
-
 .collapseBtn:hover {
   color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.themeIconBtn {
+  padding: 8px;
+  color: var(--text-muted);
+  font-size: 16px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s, background 0.15s;
+  text-align: center;
+}
+.themeIconBtn:hover {
+  color: var(--accent-cyan);
+  background: var(--accent-cyan-dim);
 }
 
 .main {

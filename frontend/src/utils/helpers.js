@@ -45,7 +45,7 @@ export function relativeTs(ts) {
   return `${day}d ago`;
 }
 
-// Generate a deterministic sample data set for demo/testing
+// Generate sample data: 60% of records within last 7 days, 40% older (up to 30 days)
 export function generateSampleLogs(n = 500) {
   const actors = [
     "priya.nair@company.com", "james.ohara@company.com", "lin.wu@company.com",
@@ -62,16 +62,25 @@ export function generateSampleLogs(n = 500) {
   const statuses = ["Resolved", "Resolved", "Unresolved", "Unresolved", "Investigating"];
 
   const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
-  const randIp = () => `${rand([10,192,172])}.${~~(Math.random()*255)}.${~~(Math.random()*255)}.${~~(Math.random()*255)}`;
-  const randDate = () => new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString();
+  const randIp = () =>
+    `${rand([10, 192, 172])}.${~~(Math.random() * 255)}.${~~(Math.random() * 255)}.${~~(Math.random() * 255)}`;
+
+  // 60% of records land in the last 7 days, 40% in the 8–30 day window
+  const randDate = () => {
+    const recentBias = Math.random() < 0.6;
+    const maxMs = recentBias
+      ? 7 * 24 * 60 * 60 * 1000          // last 7 days
+      : 30 * 24 * 60 * 60 * 1000;        // last 30 days
+    const minMs = recentBias ? 0 : 7 * 24 * 60 * 60 * 1000;
+    return new Date(Date.now() - minMs - Math.random() * (maxMs - minMs)).toISOString();
+  };
 
   return Array.from({ length: n }, (_, i) => {
     const resourceType = rand(resourceTypes);
-    const action = rand(actions);
     return {
       actor: rand(actors),
       role: rand(roles),
-      action,
+      action: rand(actions),
       resource: `/api/${resourceType.toLowerCase()}s/${300 + i}`,
       resourceType,
       ipAddress: randIp(),

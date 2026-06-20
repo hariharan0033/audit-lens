@@ -18,9 +18,11 @@ const DEFAULT_PARAMS = {
   to: "",
 };
 
+const EMPTY = { data: [], pagination: null };
+
 export function useLogs() {
   const [params, setParams] = useState(DEFAULT_PARAMS);
-  const [data, setData] = useState({ data: [], pagination: null });
+  const [data, setData] = useState(EMPTY);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const debounceRef = useRef(null);
@@ -30,15 +32,16 @@ export function useLogs() {
     setError(null);
     try {
       const result = await api.getLogs(p);
-      setData(result);
+      // null = empty/no-content response, treat as zero results
+      setData(result ?? EMPTY);
     } catch (err) {
       setError(err.message);
+      setData(EMPTY);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Debounce search, immediate for everything else
   useEffect(() => {
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => fetchLogs(params), 300);
@@ -64,8 +67,8 @@ export function useLogs() {
   const refresh = useCallback(() => fetchLogs(params), [fetchLogs, params]);
 
   return {
-    logs: data.data,
-    pagination: data.pagination,
+    logs: data.data ?? [],
+    pagination: data.pagination ?? null,
     params,
     loading,
     error,

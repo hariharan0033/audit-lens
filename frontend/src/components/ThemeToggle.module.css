@@ -1,0 +1,57 @@
+.btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+
+.btn:hover {
+  border-color: var(--border-light);
+}
+
+.track {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--border-light);
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.track[data-dark="true"] {
+  background: var(--accent-cyan);
+}
+
+.thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bg-base);
+  transition: transform 0.2s ease;
+}
+
+.track[data-dark="true"] .thumb {
+  transform: translateX(14px);
+  color: #0a0c10;
+}
+
+.label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
+}

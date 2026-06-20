@@ -1,22 +1,36 @@
 import React, { useState } from "react";
 import { useLogs } from "../hooks/useLogs";
 import { SeverityBadge, StatusBadge } from "../components/Badges";
-import { formatTs, relativeTs, SEVERITY_ORDER, STATUSES } from "../utils/helpers";
+import CustomSelect from "../components/Select";
+import { formatTs, relativeTs } from "../utils/helpers";
 import { api } from "../api/client";
 import styles from "./Logs.module.css";
 
 const REGIONS = ["ap-south-1", "us-east-1", "us-west-2", "eu-west-1", "eu-central-1", "ap-southeast-1"];
 const RESOURCE_TYPES = ["USER", "ROLE", "CONFIG", "REPORT", "SESSION", "TOKEN"];
 
+const SEVERITY_OPTIONS = [
+  { label: "Low",      value: "LOW",      color: "var(--severity-low)" },
+  { label: "Medium",   value: "MEDIUM",   color: "var(--severity-medium)" },
+  { label: "High",     value: "HIGH",     color: "var(--severity-high)" },
+  { label: "Critical", value: "CRITICAL", color: "var(--severity-critical)" },
+];
+
+const STATUS_OPTIONS = [
+  { label: "Resolved",      value: "Resolved",      color: "var(--status-resolved)" },
+  { label: "Unresolved",    value: "Unresolved",    color: "var(--status-unresolved)" },
+  { label: "Investigating", value: "Investigating", color: "var(--status-investigating)" },
+];
+
 const COLUMNS = [
-  { key: "timestamp", label: "Timestamp", sortable: true },
-  { key: "actor", label: "Actor", sortable: true },
-  { key: "role", label: "Role", sortable: true },
-  { key: "action", label: "Action", sortable: true },
+  { key: "timestamp",    label: "Timestamp",     sortable: true },
+  { key: "actor",        label: "Actor",         sortable: true },
+  { key: "role",         label: "Role",          sortable: true },
+  { key: "action",       label: "Action",        sortable: true },
   { key: "resourceType", label: "Resource Type", sortable: true },
-  { key: "region", label: "Region", sortable: true },
-  { key: "severity", label: "Severity", sortable: true },
-  { key: "status", label: "Status", sortable: true },
+  { key: "region",       label: "Region",        sortable: true },
+  { key: "severity",     label: "Severity",      sortable: true },
+  { key: "status",       label: "Status",        sortable: true },
 ];
 
 export default function Logs() {
@@ -49,6 +63,16 @@ export default function Logs() {
     } finally {
       setDeleting(null);
     }
+  }
+
+  // Convert YYYY-MM-DD local date string → start/end of that UTC day
+  function dateToFrom(val) {
+    if (!val) return "";
+    return val + "T00:00:00.000Z";
+  }
+  function dateToTo(val) {
+    if (!val) return "";
+    return val + "T23:59:59.999Z";
   }
 
   const activeFilters = Object.entries(params).filter(
@@ -84,51 +108,56 @@ export default function Logs() {
           onChange={(e) => setFilter("search", e.target.value)}
         />
 
-        <Select
+        <CustomSelect
           value={params.severity}
           onChange={(v) => setFilter("severity", v)}
-          options={SEVERITY_ORDER}
+          options={SEVERITY_OPTIONS}
           placeholder="Severity"
         />
-        <Select
+        <CustomSelect
           value={params.status}
           onChange={(v) => setFilter("status", v)}
-          options={STATUSES}
+          options={STATUS_OPTIONS}
           placeholder="Status"
         />
-        <Select
+        <CustomSelect
           value={params.region}
           onChange={(v) => setFilter("region", v)}
           options={REGIONS}
           placeholder="Region"
         />
-        <Select
+        <CustomSelect
           value={params.resourceType}
           onChange={(v) => setFilter("resourceType", v)}
           options={RESOURCE_TYPES}
           placeholder="Resource type"
         />
 
-        <input
-          className={styles.dateInput}
-          type="date"
-          title="From date"
-          value={params.from ? params.from.slice(0, 10) : ""}
-          onChange={(e) => setFilter("from", e.target.value ? e.target.value + "T00:00:00Z" : "")}
-        />
-        <input
-          className={styles.dateInput}
-          type="date"
-          title="To date"
-          value={params.to ? params.to.slice(0, 10) : ""}
-          onChange={(e) => setFilter("to", e.target.value ? e.target.value + "T23:59:59Z" : "")}
-        />
+        {/* Date range — styled to match the app */}
+        <div className={styles.dateWrap}>
+          <span className={styles.dateLabel}>From</span>
+          <input
+            className={styles.dateInput}
+            type="date"
+            value={params.from ? params.from.slice(0, 10) : ""}
+            onChange={(e) => setFilter("from", dateToFrom(e.target.value))}
+          />
+        </div>
+        <div className={styles.dateWrap}>
+          <span className={styles.dateLabel}>To</span>
+          <input
+            className={styles.dateInput}
+            type="date"
+            value={params.to ? params.to.slice(0, 10) : ""}
+            onChange={(e) => setFilter("to", dateToTo(e.target.value))}
+          />
+        </div>
       </div>
 
       {/* Table */}
       <div className={styles.tableWrap}>
         {loading && <div className={styles.loadingBar} />}
-        {error && <div className={styles.error}>{error}</div>}
+        {error && <div className={styles.error}>⚠ {error}</div>}
 
         <table className={styles.table}>
           <thead>
@@ -154,7 +183,7 @@ export default function Logs() {
             {logs.length === 0 && !loading && (
               <tr>
                 <td colSpan={COLUMNS.length + 1} className={styles.empty}>
-                  No logs match the current filters.
+                  {error ? "Could not load logs." : "No logs match the current filters."}
                 </td>
               </tr>
             )}
@@ -164,7 +193,7 @@ export default function Logs() {
                 className={`${styles.row} ${selected?._id === log._id ? styles.rowActive : ""}`}
                 onClick={() => setSelected(selected?._id === log._id ? null : log)}
               >
-                <td className={`${styles.td} ${styles.tdMono}`} title={log.timestamp}>
+                <td className={`${styles.td} ${styles.tdMono}`} title={formatTs(log.timestamp)}>
                   {relativeTs(log.timestamp)}
                 </td>
                 <td className={`${styles.td} ${styles.tdMono}`}>{log.actor}</td>
@@ -211,15 +240,17 @@ export default function Logs() {
             Next →
           </button>
 
-          <select
-            className={styles.limitSelect}
-            value={params.limit}
-            onChange={(e) => setFilter("limit", Number(e.target.value))}
-          >
-            {[25, 50, 100, 200].map((n) => (
-              <option key={n} value={n}>{n} per page</option>
-            ))}
-          </select>
+          <CustomSelect
+            value={String(params.limit)}
+            onChange={(v) => setFilter("limit", Number(v))}
+            options={[
+              { label: "25 per page",  value: "25" },
+              { label: "50 per page",  value: "50" },
+              { label: "100 per page", value: "100" },
+              { label: "200 per page", value: "200" },
+            ]}
+            placeholder="Per page"
+          />
         </div>
       )}
 
@@ -237,10 +268,10 @@ export default function Logs() {
                 <div key={k} className={styles.detailRow}>
                   <span className={styles.detailKey}>{k}</span>
                   <span className={styles.detailVal}>
-                    {k === "severity" ? <SeverityBadge value={v} />
-                      : k === "status" ? <StatusBadge value={v} />
-                      : k === "timestamp" ? formatTs(v)
-                      : String(v)}
+                    {k === "severity"  ? <SeverityBadge value={v} />
+                    : k === "status"   ? <StatusBadge value={v} />
+                    : k === "timestamp" ? formatTs(v)
+                    : String(v)}
                   </span>
                 </div>
               ))}
@@ -248,18 +279,5 @@ export default function Logs() {
         </div>
       )}
     </div>
-  );
-}
-
-function Select({ value, onChange, options, placeholder }) {
-  return (
-    <select
-      className={styles.filterSelect}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-    >
-      <option value="">{placeholder}</option>
-      {options.map((o) => <option key={o} value={o}>{o}</option>)}
-    </select>
   );
 }
