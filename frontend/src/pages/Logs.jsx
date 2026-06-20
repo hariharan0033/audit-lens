@@ -33,6 +33,26 @@ const COLUMNS = [
   { key: "status",       label: "Status",        sortable: true },
 ];
 
+/**
+ * Convert a "YYYY-MM-DD" string from <input type="date"> to an ISO timestamp.
+ * The browser gives us the date in LOCAL time, so we parse it as local midnight /
+ * local end-of-day — not UTC — to match what the user sees on their calendar.
+ */
+function localDateToFromISO(val) {
+  if (!val) return "";
+  // Parse as local midnight
+  const [y, m, d] = val.split("-").map(Number);
+  const dt = new Date(y, m - 1, d, 0, 0, 0, 0);
+  return dt.toISOString(); // converted to UTC by JS
+}
+
+function localDateToToISO(val) {
+  if (!val) return "";
+  const [y, m, d] = val.split("-").map(Number);
+  const dt = new Date(y, m - 1, d, 23, 59, 59, 999);
+  return dt.toISOString();
+}
+
 export default function Logs() {
   const {
     logs, pagination, params, loading, error,
@@ -65,14 +85,14 @@ export default function Logs() {
     }
   }
 
-  // Convert YYYY-MM-DD local date string → start/end of that UTC day
-  function dateToFrom(val) {
-    if (!val) return "";
-    return val + "T00:00:00.000Z";
-  }
-  function dateToTo(val) {
-    if (!val) return "";
-    return val + "T23:59:59.999Z";
+  // Extract the YYYY-MM-DD portion in LOCAL time from the stored ISO string
+  function isoToLocalDate(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
   }
 
   const activeFilters = Object.entries(params).filter(
@@ -133,14 +153,14 @@ export default function Logs() {
           placeholder="Resource type"
         />
 
-        {/* Date range — styled to match the app */}
+        {/* Date range — local-aware */}
         <div className={styles.dateWrap}>
           <span className={styles.dateLabel}>From</span>
           <input
             className={styles.dateInput}
             type="date"
-            value={params.from ? params.from.slice(0, 10) : ""}
-            onChange={(e) => setFilter("from", dateToFrom(e.target.value))}
+            value={isoToLocalDate(params.from)}
+            onChange={(e) => setFilter("from", localDateToFromISO(e.target.value))}
           />
         </div>
         <div className={styles.dateWrap}>
@@ -148,8 +168,8 @@ export default function Logs() {
           <input
             className={styles.dateInput}
             type="date"
-            value={params.to ? params.to.slice(0, 10) : ""}
-            onChange={(e) => setFilter("to", dateToTo(e.target.value))}
+            value={isoToLocalDate(params.to)}
+            onChange={(e) => setFilter("to", localDateToToISO(e.target.value))}
           />
         </div>
       </div>
@@ -268,8 +288,8 @@ export default function Logs() {
                 <div key={k} className={styles.detailRow}>
                   <span className={styles.detailKey}>{k}</span>
                   <span className={styles.detailVal}>
-                    {k === "severity"  ? <SeverityBadge value={v} />
-                    : k === "status"   ? <StatusBadge value={v} />
+                    {k === "severity"   ? <SeverityBadge value={v} />
+                    : k === "status"    ? <StatusBadge value={v} />
                     : k === "timestamp" ? formatTs(v)
                     : String(v)}
                   </span>
