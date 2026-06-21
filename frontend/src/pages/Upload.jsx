@@ -3,6 +3,8 @@ import { api } from "../api/client";
 import { generateSampleLogs } from "../utils/helpers";
 import styles from "./Upload.module.css";
 
+const isDev = import.meta.env.DEV; // true during `npm run dev`, false in production builds
+
 export default function Upload() {
   const [file, setFile]       = useState(null);
   const [status, setStatus]   = useState(null);
@@ -11,13 +13,14 @@ export default function Upload() {
   const [dbInfo, setDbInfo]   = useState(null);
   const inputRef = useRef(null);
 
-  // Fetch debug info on mount so user can see what's in the DB
+  // Fetch debug info on mount — dev only
   useEffect(() => {
+    if (!isDev) return;
     fetch("/api/debug")
       .then((r) => r.json())
       .then(setDbInfo)
-      .catch(() => {}); // non-critical
-  }, [status]); // refresh after any upload/delete action
+      .catch(() => {});
+  }, [status]);
 
   function handleFile(f) {
     if (!f) return;
@@ -113,8 +116,8 @@ export default function Upload() {
         <p className={styles.subtitle}>Upload a JSON array of up to 10,000 audit log records.</p>
       </header>
 
-      {/* DB snapshot */}
-      {dbInfo && (
+      {/* DB snapshot — dev only */}
+      {isDev && dbInfo && (
         <div className={styles.dbInfo}>
           <span className={styles.dbInfoLabel}>Current DB</span>
           <span className={styles.dbInfoStat}>
@@ -191,9 +194,9 @@ export default function Upload() {
         </button>
       </div>
 
-      {/* Quick tools */}
-      <div className={styles.tools}>
-        <h2 className={styles.toolsTitle}>Quick Tools</h2>
+      {/* Quick tools — dev only */}
+      {isDev && <div className={styles.tools}>
+        <h2 className={styles.toolsTitle}>Quick Tools <span className={styles.devBadge}>dev only</span></h2>
         <div className={styles.toolGrid}>
 
           <div className={styles.tool}>
@@ -252,7 +255,7 @@ export default function Upload() {
           </div>
 
         </div>
-      </div>
+      </div>}
 
       {/* Schema */}
       <div className={styles.schema}>
