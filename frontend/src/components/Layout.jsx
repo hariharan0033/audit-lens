@@ -19,7 +19,7 @@ export default function Layout({ children }) {
       <aside className={styles.sidebar}>
         <div className={styles.logo}>
           <span className={styles.logoMark}>▣</span>
-          {!collapsed && <span className={styles.logoText}>AuditSight</span>}
+          {!collapsed && <span className={styles.logoText}>AuditLens</span>}
         </div>
 
         <nav className={styles.nav}>

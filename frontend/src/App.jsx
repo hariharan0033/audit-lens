@@ -7,7 +7,7 @@ import Upload from "./pages/Upload";
 
 // Apply saved theme before first render to avoid flash
 const stored = (() => {
-  try { return localStorage.getItem("auditsight-theme"); } catch { return null; }
+  try { return localStorage.getItem("auditlens-theme"); } catch { return null; }
 })();
 const initial = stored || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
 document.documentElement.setAttribute("data-theme", initial);

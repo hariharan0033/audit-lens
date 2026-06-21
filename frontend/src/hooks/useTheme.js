@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 
-const STORAGE_KEY = "auditsight-theme";
+const STORAGE_KEY = "auditlens-theme";
 
 function getInitial() {
   try {
