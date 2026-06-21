@@ -14,12 +14,29 @@ const app = express();
 const PORT      = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/gidy-audit";
 
-app.use(helmet());
-app.use(compression());
+// CORS must be registered BEFORE helmet and all other middleware
+// so preflight OPTIONS requests are handled correctly
+const allowedOrigins = process.env.CLIENT_ORIGIN
+  ? process.env.CLIENT_ORIGIN.split(",").map((o) => o.trim())
+  : "*";
+
 app.use(cors({
-  origin: process.env.CLIENT_ORIGIN || "*",
-  methods: ["GET", "POST", "DELETE"],
+  origin: allowedOrigins,
+  methods: ["GET", "POST", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
 }));
+
+// Handle preflight OPTIONS for all routes explicitly
+app.options("*", cors());
+
+// helmet AFTER cors — and disable crossOriginResourcePolicy so it doesn't
+// override the CORS headers we just set
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+}));
+
+app.use(compression());
 
 const uploadLimiter = rateLimit({ windowMs: 60_000, max: 10,
   message: { error: "Too many upload requests. Please wait a minute." } });
@@ -34,9 +51,15 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 app.use("/api/logs",  logsRouter);
 app.use("/api/stats", statsRouter);
-app.use("/api/debug", debugRouter);   // ← remove before production
+app.use("/api/debug", debugRouter); // remove before production
 
-app.get("/health", (_req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
+app.get("/health", (_req, res) =>
+  res.json({ status: "ok", timestamp: new Date().toISOString() })
+);
+
+app.get("/", (_req, res) =>
+  res.json({ status: "ok", message: "Server is running." })
+);
 
 app.use((err, _req, res, _next) => {
   console.error(err.stack);
